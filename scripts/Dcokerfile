@@ -1,0 +1,25 @@
+#configuring self-hosted agent for azure devops
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y \
+    curl jq git sudo unzip \
+    libssl-dev apt-transport-https ca-certificates gnupg software-properties-common
+
+# Install Terraform
+RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+    > /etc/apt/sources.list.d/hashicorp.list && \
+    apt-get update && apt-get install -y terraform
+
+RUN useradd -m agent
+WORKDIR /azp
+COPY ./start.sh .
+RUN chmod +x start.sh
+
+# Fix permissions
+RUN chown -R agent:agent /azp
+
+ENV TARGETARCH=linux-x64
+
+USER agent
+CMD ["./start.sh"]
