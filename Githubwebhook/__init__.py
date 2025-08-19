@@ -54,5 +54,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # 4. Trigger pipeline in background
     threading.Thread(target=trigger_pipeline).start()
 
-    # 5. Respond to GitHub
+    # 5. Respond to gitHub
+
     return func.HttpResponse("Webhook processed!", status_code=200)
