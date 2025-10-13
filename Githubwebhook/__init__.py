@@ -35,25 +35,26 @@ def trigger_pipeline():
         print(f"[EXCEPTION] Pipeline trigger failed: {e}")
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    # 1. Get signature
+    # 1. get signature
     gh_sig = req.headers.get("X-Hub-Signature-256", "")
 
-    # 2. Get secret from Key Vault
+    # 2. get secret from Key Vault
     kv_client = SecretClient(
         vault_url=f"https://{os.environ['KEY_VAULT_NAME']}.vault.azure.net",
         credential=DefaultAzureCredential()
     )
     secret = kv_client.get_secret(os.environ["GITHUB_WEBHOOK_SECRET_NAME"]).value
 
-    # 3. Verify signature
+    # 3. verify signature
     body = req.get_body()
     expected_sig = "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
     if not hmac.compare_digest(expected_sig, gh_sig):
         return func.HttpResponse("Bad signature", status_code=403)
 
-    # 4. Trigger pipeline in background
+    # 4. trigger pipeline in background
     threading.Thread(target=trigger_pipeline).start()
 
-    # 5. Respond to gitHub
+    # 5. respond to gitHub
 
     return func.HttpResponse("Webhook processed!", status_code=200)
+
